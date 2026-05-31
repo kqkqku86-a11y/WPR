@@ -16,6 +16,11 @@ jobs:
         with:
           dotnet-version: '8.0.408'
 
+      - name: Verify SDK
+        run: |
+          dotnet --version
+          dotnet --info
+
       - name: Show .NET info
         run: dotnet --info
 
@@ -28,15 +33,12 @@ jobs:
           Src/UI/WPR.UI.Android/WPR.UI.Android.csproj \
           -p:TargetFramework=net8.0-android34.0
 
-      - name: Build ARMv7 APK
+      - name: Publish
         run: |
           dotnet publish \
           Src/UI/WPR.UI.Android/WPR.UI.Android.csproj \
           -c Release \
-          -f net8.0-android34.0 \
-          -p:RuntimeIdentifier=android-arm \
-          -p:AndroidPackageFormat=apk \
-          --self-contained false
+          -f net8.0-android34.0
 
       - name: Find APK
         run: find . -iname "*.apk"
