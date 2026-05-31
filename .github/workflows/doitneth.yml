@@ -27,11 +27,8 @@ jobs:
       - name: Install Android workload
         run: dotnet workload install android
 
-      - name: Restore dependencies
-        run: |
-          dotnet restore \
-          Src/UI/WPR.UI.Android/WPR.UI.Android.csproj \
-          -p:TargetFramework=net8.0-android34.0
+      - name: Restore
+        run: dotnet restore Src/WPR.sln
 
       - name: Publish
         run: |
