@@ -1,4 +1,4 @@
-name: Goose Auto Bug Fixer
+name: Goose Auto Bug Fixer (Groq)
 
 on:
   issues:
@@ -6,62 +6,49 @@ on:
 
 jobs:
   goose-agent:
-    # Mengamankan alur kerja agar Goose HANYA berjalan jika label 'this' ditempelkan
     if: github.event.label.name == 'this'
     runs-on: ubuntu-latest
 
-    # Memberikan hak akses bagi Goose untuk memodifikasi kode & membuat Pull Request
     permissions:
       contents: write
       issues: write
       pull-requests: write
 
     steps:
-      # 1. Mengunduh kode dari repositori ke dalam GitHub Runner
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # 2. Memasang komponen dasar (Node.js/Python dll jika dibutuhkan untuk pengetesan kode Anda)
-      - name: Setup Node.js (Opsional)
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-       # 3. Mengunduh dan Memasang Goose CLI Resmi versi Linux
       - name: Install Goose CLI
         run: |
           echo "Downloading latest Goose binary..."
-          curl -fsSL https://github.com/aaif-goose/goose/releases/latest/download/goose-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          curl -fsSL https://github.com | tar -xz
           sudo mv goose /usr/local/bin/
           goose --version
 
-      # 4. Run Goose Agent to Diagnose and Fix Code
+      # Langkah 4: Menjalankan Goose Agent dengan Groq Cloud
       - name: Run Goose Agent
         env:
-          # Configuration using Google Gemini API (Free Tier & Token Efficient)
-          GOOSE_PROVIDER: google
-          GOOSE_MODEL: gemini-2.5-flash-lite
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          # PERBAIKAN: Mengalihkan provider dari Google ke Groq Cloud
+          GOOSE_PROVIDER: groq
+          GOOSE_MODEL: qwen-2.5-coder-32b
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Get information from the triggered GitHub Issue
           ISSUE_TITLE='${{ github.event.issue.title }}'
           ISSUE_BODY='${{ github.event.issue.body }}'
           
           echo "Starting Goose investigation for Issue: $ISSUE_TITLE"
           
-          # Fix: Using --text and carefully escaping strings to prevent OS error 36
-          goose run --text "Your task is to resolve the following GitHub issue. Issue Title: $ISSUE_TITLE. Detailed Description: $ISSUE_BODY. Mandatory workflow: 1. Find the most relevant files in this repository related to the issue. Do not read unrelated files to minimize token consumption. 2. Analyze the bug and apply the fix directly to the code. 3. If there are any test files available (like jest, vitest, pytest, or npm test), run the testing command in the terminal to ensure your fix does not break other features. 4. Once verified and tests pass, use Git tools to create a new branch, commit your changes, and automatically open a Pull Request to the main or master branch."
+          # Instruksi tembak langsung ke file target
+          goose run --text "Your task is to resolve the following GitHub issue. Issue Title: $ISSUE_TITLE. Detailed Description: $ISSUE_BODY. Mandatory workflow: 1. Go straight to Src/UI/WPR.UI.Android/WPR.UI.Android.csproj. Do not scan other folders. 2. Edit that csproj file: change <RuntimeIdentifiers> to only include android-arm64;android-x64 (remove android-arm). 3. Immediately use Git tools to create a new branch named 'feature/arm64-build', commit your changes, push to origin, and open a Pull Request to the main/master branch. Do not run any tests."
 
-          # 5. Automatically comment on the Issue that the PR has been created
+      # Langkah 5: Komentar Otomatis Jika Sukses
       - name: Comment on Issue
         if: success()
         env:
-          # PERBAIKAN: Menyediakan akses token khusus untuk GitHub CLI (gh)
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body "🤖 **Goose has successfully fixed the bug!** I have analyzed the issue, repaired the code in the background, and automatically created a new Pull Request (PR) for your review. Please check the Pull Requests tab."
-
+          gh issue comment ${{ github.event.issue.number }} --body "🤖 **Goose has successfully fixed the bug via Groq!** I have analyzed the issue, repaired the code in the background, and automatically created a new Pull Request (PR) for your review. Please check the Pull Requests tab."
 
