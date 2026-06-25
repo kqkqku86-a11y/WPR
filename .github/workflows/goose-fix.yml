@@ -43,7 +43,7 @@ jobs:
           # Configuration using Google Gemini API (Free Tier & Token Efficient)
           GOOSE_PROVIDER: google
           GOOSE_MODEL: gemini-1.5-flash
-          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get information from the triggered GitHub Issue
