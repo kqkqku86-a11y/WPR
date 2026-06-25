@@ -23,7 +23,7 @@ jobs:
       - name: Install Goose CLI
         run: |
           echo "Downloading latest Goose binary..."
-          curl -fsSL https://github.com | tar -xz
+          curl -fsSL https://github.com/aaif-goose/goose/releases/latest/download/goose-x86_64-unknown-linux-gnu.tar.gz | tar -xz
           sudo mv goose /usr/local/bin/
           goose --version
 
