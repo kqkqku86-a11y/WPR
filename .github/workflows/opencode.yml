@@ -32,4 +32,4 @@ jobs:
          env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
          with:
-           model: openai/gpt-oss-120b
+           model: gpt-4
