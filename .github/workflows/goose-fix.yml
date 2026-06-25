@@ -55,9 +55,12 @@ jobs:
           # Fix: Using --text and carefully escaping strings to prevent OS error 36
           goose run --text "Your task is to resolve the following GitHub issue. Issue Title: $ISSUE_TITLE. Detailed Description: $ISSUE_BODY. Mandatory workflow: 1. Find the most relevant files in this repository related to the issue. Do not read unrelated files to minimize token consumption. 2. Analyze the bug and apply the fix directly to the code. 3. If there are any test files available (like jest, vitest, pytest, or npm test), run the testing command in the terminal to ensure your fix does not break other features. 4. Once verified and tests pass, use Git tools to create a new branch, commit your changes, and automatically open a Pull Request to the main or master branch."
 
-      # 5. Automatically comment on the Issue that the PR has been created
+          # 5. Automatically comment on the Issue that the PR has been created
       - name: Comment on Issue
         if: success()
+        env:
+          # PERBAIKAN: Menyediakan akses token khusus untuk GitHub CLI (gh)
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh issue comment ${{ github.event.issue.number }} --body "🤖 **Goose has successfully fixed the bug!** I have analyzed the issue, repaired the code in the background, and automatically created a new Pull Request (PR) for your review. Please check the Pull Requests tab."
 
