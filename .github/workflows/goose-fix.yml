@@ -6,8 +6,8 @@ on:
 
 jobs:
   goose-agent:
-    # Mengamankan alur kerja agar Goose HANYA berjalan jika label 'bug' ditempelkan
-    if: github.event.label.name == 'bug'
+    # Mengamankan alur kerja agar Goose HANYA berjalan jika label 'this' ditempelkan
+    if: github.event.label.name == 'this'
     runs-on: ubuntu-latest
 
     # Memberikan hak akses bagi Goose untuk memodifikasi kode & membuat Pull Request
@@ -42,6 +42,7 @@ jobs:
         env:
           # Configuration using Google Gemini API (Free Tier & Token Efficient)
           GOOSE_PROVIDER: google
+          GOOSE_MODEL: gemini-1.5-flash
           GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
