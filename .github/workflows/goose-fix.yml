@@ -1,0 +1,73 @@
+name: Goose Auto Bug Fixer
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  goose-agent:
+    # Mengamankan alur kerja agar Goose HANYA berjalan jika label 'bug' ditempelkan
+    if: github.event.label.name == 'bug'
+    runs-on: ubuntu-latest
+
+    # Memberikan hak akses bagi Goose untuk memodifikasi kode & membuat Pull Request
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      # 1. Mengunduh kode dari repositori ke dalam GitHub Runner
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # 2. Memasang komponen dasar (Node.js/Python dll jika dibutuhkan untuk pengetesan kode Anda)
+      - name: Setup Node.js (Opsional)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+       # 3. Mengunduh dan Memasang Goose CLI Resmi versi Linux
+      - name: Install Goose CLI
+        run: |
+          echo "Downloading latest Goose binary..."
+          curl -fsSL https://github.com/aaif-goose/goose/releases/latest/download/goose-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          sudo mv goose /usr/local/bin/
+          goose --version
+
+      # 4. Run Goose Agent to Diagnose and Fix Code
+      - name: Run Goose Agent
+        env:
+          # Configuration using Google Gemini API (Free Tier & Token Efficient)
+          GOOSE_PROVIDER: google
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get information from the triggered GitHub Issue
+          ISSUE_TITLE="${{ github.event.issue.title }}"
+          ISSUE_BODY="${{ github.event.issue.body }}"
+          
+          echo "Starting Goose investigation for Issue: $ISSUE_TITLE"
+          
+          # Strict instructions for Goose to be efficient and save tokens
+          goose run --instructions "
+          Your task is to resolve the following issue:
+          Issue Title: $ISSUE_TITLE
+          Detailed Description: $ISSUE_BODY
+          
+          Mandatory workflow:
+          1. Find the most relevant files in this repository related to the issue above. Do not read unrelated files to minimize token consumption.
+          2. Analyze the bug and apply the fix directly to the code.
+          3. If there are any test files available (e.g., jest, vitest, pytest, or npm test), run the testing command in the terminal to ensure your fix does not break other features.
+          4. Once the code is verified and tests pass, use Git tools to create a new branch, commit your changes, and automatically open a Pull Request (PR) to the main/master branch.
+          "
+
+      # 5. Automatically comment on the Issue that the PR has been created
+      - name: Comment on Issue
+        if: success()
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "🤖 **Goose has successfully fixed the bug!** I have analyzed the issue, repaired the code in the background, and automatically created a new Pull Request (PR) for your review. Please check the Pull Requests tab."
+
+
